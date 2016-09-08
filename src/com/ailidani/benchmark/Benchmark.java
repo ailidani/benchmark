@@ -9,9 +9,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class Benchmark {
 
     protected DB db;
-    protected int recordcount;
-    protected int operationcount;
-    protected int snapshotcount;
+    protected long recordcount;
+    protected long operationcount;
+    protected long snapshotcount;
+    protected float getp;
+    protected float putp;
+    protected float removep;
 
     protected long interval; /* ms */
     protected int totalTime; /* second */
@@ -30,6 +33,9 @@ public abstract class Benchmark {
         recordcount = Config.getRecordCount();
         operationcount = Config.getOperationCount();
         snapshotcount = Config.getSnapshotCount();
+        getp = Config.getGetProportion();
+        putp = Config.getPutProportion();
+        removep = Config.getRemoveProportion();
         interval = Config.getInterval();
         totalTime = Config.getTotalTime();
         barrier = new CountDownLatch(1);
@@ -99,8 +105,8 @@ public abstract class Benchmark {
             }
         }
 
-        // Load the data if there are get or delete op
-        if (Config.getGetProportion() + Config.getDeleteProportion() > 0) {
+        // Load the data if there are get or remove op
+        if (benchmark.getp + benchmark.removep > 0) {
             benchmark.load();
         }
 

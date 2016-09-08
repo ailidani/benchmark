@@ -4,9 +4,9 @@ import java.util.Map;
 
 public abstract class DB<K, V> {
 
-    protected Map<K, V> data;
+    //protected Map<K, V> data;
 
-    protected abstract Map.Entry<K, V> next(long k, byte[] v);
+    protected abstract Map.Entry<K, V> cast(long k, byte[] v);
 
     public abstract void init(String address);
 
@@ -16,7 +16,11 @@ public abstract class DB<K, V> {
 
     public abstract V put(K key, V value);
 
-    public abstract V delete(K key);
+    public abstract V remove(K key);
+
+    public void set(K key, V value) {}
+
+    public void delete(K key) {}
 
     public abstract boolean snapshot();
 

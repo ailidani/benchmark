@@ -13,7 +13,6 @@ public class CentralizedBenchmark extends Benchmark {
     //protected CyclicBarrier barrier;
 
     private long startTime, lastTime;
-    private int lastFinished = 0;
 
     @Override
     public void init() {
@@ -35,7 +34,14 @@ public class CentralizedBenchmark extends Benchmark {
     public void load() {
         System.out.println("Loading...");
         db.init(address);
-        db.data.forEach( (k,v) -> db.put(k, v) );
+
+        byte[] v = new byte[Config.getDataSize()];
+        new Random().nextBytes(v);
+        for (long i=1; i<=recordcount; i++) {
+            Map.Entry entry = db.cast(i, v);
+            db.put(entry.getKey(), entry.getValue());
+        }
+
         System.out.println("Loading Done.");
     }
 
@@ -54,7 +60,7 @@ public class CentralizedBenchmark extends Benchmark {
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new UpdateTimer(), interval, interval);
 
-        int step = totalTime * 1000 / (snapshotcount + 1);
+        long step = totalTime * 1000 / (snapshotcount + 1);
         for (int i=0; i<snapshotcount; i++) {
             Timer snapshot = new Timer();
             snapshot.schedule(new SnapshotTimer(), step * (i+1));
@@ -79,8 +85,11 @@ public class CentralizedBenchmark extends Benchmark {
     }
 
     private class UpdateTimer extends TimerTask {
-        @Override
-        public void run() {
+
+        private int lastFinished = 0;
+        private int lastIndex = 0;
+
+        private void throughput() {
             int totalFinished = finished.get();
             if (totalFinished == 0) return;
 
@@ -88,11 +97,38 @@ public class CentralizedBenchmark extends Benchmark {
             double elapsed = (currentTime - startTime) / 1000000000.0;
             double throughput = (double)(totalFinished - lastFinished) / ((double)(currentTime - lastTime) / 1000000000.0);
             System.out.printf("Current Throughput = %f (ops/s)\n", throughput);
-
-
-
             lastTime = currentTime;
             lastFinished = totalFinished;
+        }
+
+        private void measure(List<Double> latencies) {
+            Collections.sort(latencies);
+            int size = latencies.size();
+            double sum = 0;
+            for (double latency : latencies) {
+                sum += latency;
+            }
+            double mean = sum / (double)size;
+            double min = latencies.get(0);
+            double max = latencies.get(size - 1);
+            double ninefive = latencies.get((int)(size * 0.95));
+            double ninenine = latencies.get((int)(size * 0.99));
+            System.out.printf("Current Average Latency = %f (ms)\n", mean);
+            System.out.printf("Current Min Latency = %f (ms)\n", min);
+            System.out.printf("Current Max Latency = %f (ms)\n", max);
+            System.out.printf("Current 95th Percentile Latency = %f (ms)\n", ninefive);
+            System.out.printf("Current 99th Percentile Latency = %f (ms)\n", ninenine);
+        }
+
+        @Override
+        public void run() {
+            throughput();
+
+            int n = putLatency.size();
+            if (n == 0) return;
+            List<Double> latencies = putLatency.subList(lastIndex, n);
+            measure(latencies);
+
         }
     }
 

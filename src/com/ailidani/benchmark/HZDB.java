@@ -30,7 +30,7 @@ public class HZDB extends DB<Long, byte[]> {
     }
 
     @Override
-    protected Map.Entry<Long, byte[]> next(long k, byte[] v) {
+    protected Map.Entry<Long, byte[]> cast(long k, byte[] v) {
         return new AbstractMap.SimpleEntry<>(k, v);
     }
 
@@ -45,8 +45,18 @@ public class HZDB extends DB<Long, byte[]> {
     }
 
     @Override
-    public byte[] delete(Long key) {
+    public byte[] remove(Long key) {
         return map.remove(key);
+    }
+
+    @Override
+    public void set(Long key, byte[] value) {
+        map.set(key, value);
+    }
+
+    @Override
+    public void delete(Long key) {
+        map.delete(key);
     }
 
     @Override

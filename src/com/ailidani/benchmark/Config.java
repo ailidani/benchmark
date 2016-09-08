@@ -26,16 +26,16 @@ public class Config extends Configuration {
         return instance.getProperty("benchmark", "centralized");
     }
 
-    public static int getRecordCount() {
-        return instance.getIntProperty("recordcount", 1000);
+    public static long getRecordCount() {
+        return instance.getLongProperty("recordcount", 1000);
     }
 
     public static int getDataSize() {
         return instance.getIntProperty("datasize", 100);
     }
 
-    public static int getOperationCount() {
-        return instance.getIntProperty("operationcount", 0);
+    public static long getOperationCount() {
+        return instance.getLongProperty("operationcount", 0);
     }
 
     public static long getInterval() {
@@ -78,13 +78,13 @@ public class Config extends Configuration {
         return p;
     }
 
-    public static float getDeleteProportion() {
-        float p = instance.getFloatProperty("deleteproportion", 0);
+    public static float getRemoveProportion() {
+        float p = instance.getFloatProperty("removeproportion", 0);
         if (p < 0 || p > 1) p = 0;
         return p;
     }
 
-    public static int getSnapshotCount() {
-        return instance.getIntProperty("snapshotcount", 0);
+    public static long getSnapshotCount() {
+        return instance.getLongProperty("snapshotcount", 0);
     }
 }

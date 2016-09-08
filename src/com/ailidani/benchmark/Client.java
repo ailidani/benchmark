@@ -41,7 +41,7 @@ public class Client implements Runnable, Serializable {
         db.init(address);
         float get = Config.getGetProportion();
         float put = get + Config.getPutProportion();
-        float delete = put + Config.getDeleteProportion();
+        float delete = put + Config.getRemoveProportion();
 
         try {
             benchmark.barrier.await();
@@ -53,15 +53,16 @@ public class Client implements Runnable, Serializable {
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new FinishTimer(), benchmark.interval, benchmark.interval);
 
-        long n = max - min;
+        long n = max - min + 1;
+        Random random = new Random();
         byte[] v = new byte[Config.getDataSize()];
         new Random().nextBytes(v);
         long start = System.nanoTime();
 
         while (true) {
 
-            long k = new Random().nextLong() % n + min;
-            Map.Entry entry = db.next(k, v);
+            long k = random.nextLong() % n + min;
+            Map.Entry entry = db.cast(k, v);
 
             double r = Math.random();
             long s, e;
@@ -81,7 +82,7 @@ public class Client implements Runnable, Serializable {
 
             else if (r <= delete) {
                 s = System.nanoTime();
-                db.delete(entry.getKey());
+                db.remove(entry.getKey());
                 e = System.nanoTime();
                 benchmark.deleteLatency.add( (e - s) / 1000000.0 );
             }
@@ -110,9 +111,9 @@ public class Client implements Runnable, Serializable {
 //                    benchmark.putLatency.add( (e - s) / 1000000.0 );
 //                }
 //
-//                else if (r <= delete) {
+//                else if (r <= remove) {
 //                    s = System.nanoTime();
-//                    db.delete(k);
+//                    db.remove(k);
 //                    e = System.nanoTime();
 //                    benchmark.deleteLatency.add( (e - s) / 1000000.0 );
 //                }
