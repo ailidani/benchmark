@@ -5,11 +5,14 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 
-public class HZDB extends DB<Integer, byte[]> {
+import java.util.AbstractMap;
+import java.util.Map;
+
+public class HZDB extends DB<Long, byte[]> {
 
     private String NAME = "test";
     HazelcastInstance client;
-    IMap<Integer, byte[]> map;
+    IMap<Long, byte[]> map;
 
     @Override
     public void init(String address) {
@@ -27,18 +30,23 @@ public class HZDB extends DB<Integer, byte[]> {
     }
 
     @Override
-    public byte[] get(Integer key) {
+    protected Map.Entry<Long, byte[]> next(long k, byte[] v) {
+        return new AbstractMap.SimpleEntry<>(k, v);
+    }
+
+    @Override
+    public byte[] get(Long key) {
         return map.get(key);
     }
 
     @Override
-    public void put(Integer key, byte[] value) {
-        map.put(key, value);
+    public byte[] put(Long key, byte[] value) {
+        return map.put(key, value);
     }
 
     @Override
-    public void delete(Integer key) {
-        map.delete(key);
+    public byte[] delete(Long key) {
+        return map.remove(key);
     }
 
     @Override

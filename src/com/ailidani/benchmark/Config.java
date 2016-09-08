@@ -19,11 +19,19 @@ public class Config extends Configuration {
     }
 
     public static String getDBName() {
-        return instance.getProperty("db", "HZDB");
+        return instance.getProperty("db", "com.ailidani.benchmark.HZDB");
+    }
+
+    public static String getBenchmark() {
+        return instance.getProperty("benchmark", "centralized");
     }
 
     public static int getRecordCount() {
         return instance.getIntProperty("recordcount", 1000);
+    }
+
+    public static int getDataSize() {
+        return instance.getIntProperty("datasize", 100);
     }
 
     public static int getOperationCount() {
@@ -31,18 +39,15 @@ public class Config extends Configuration {
     }
 
     public static long getInterval() {
-        // milliseconds
-        return instance.getLongProperty("interval", 1000);
+        return instance.getLongProperty("interval", 1000 /* milliseconds */);
     }
 
     public static int getTotalTime() {
-        // seconds
-        return instance.getIntProperty("totalTime", 60);
+        return instance.getIntProperty("totalTime", 60 /* seconds */);
     }
 
     public static int getThrottle() {
-        // ops / second
-        return instance.getIntProperty("throttle", -1);
+        return instance.getIntProperty("throttle", -1 /* ops/second */);
     }
 
     public static int getClients() {
