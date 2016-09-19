@@ -1,6 +1,7 @@
-package com.ailidani.benchmark;
+package benchmark;
 
 import java.util.Map;
+import java.util.Properties;
 
 public abstract class DB<K, V> {
 
@@ -17,7 +18,7 @@ public abstract class DB<K, V> {
      *
      * @param address the server address used by current client
      */
-    public abstract void init(String address);
+    public abstract void init(String address, Properties properties);
 
     /**
      * Cleanup the benchmark data, disconnect the client etc.

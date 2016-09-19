@@ -1,4 +1,4 @@
-package com.ailidani.benchmark;
+package benchmark;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -7,21 +7,22 @@ import com.hazelcast.core.IMap;
 
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Properties;
 
-public class HZDB extends DB<Long, byte[]> {
+public class HazelcastDB extends DB<Long, byte[]> {
 
-    private String NAME = "test";
     HazelcastInstance client;
     IMap<Long, byte[]> map;
 
     @Override
-    public void init(String address) {
+    public void init(String address, Properties properties) {
+        String name = properties.getProperty("group.name");
+        String pass = properties.getProperty("group.password");
         ClientConfig config = new ClientConfig();
-        //config.getNetworkConfig().setSmartRouting(false);
         config.getNetworkConfig().addAddress(address);
-        config.getGroupConfig().setName(Config.getGroupName()).setPassword(Config.getGroupPassword());
+        config.getGroupConfig().setName(name).setPassword(pass);
         client = HazelcastClient.newHazelcastClient(config);
-        map = client.getMap(NAME);
+        map = client.getMap(name);
     }
 
     @Override

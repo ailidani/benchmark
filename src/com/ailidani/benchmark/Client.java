@@ -1,52 +1,93 @@
 package com.ailidani.benchmark;
 
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.HazelcastInstanceAware;
+import com.hazelcast.core.ReplicatedMap;
+
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.LockSupport;
 
-public class Client implements Runnable, Serializable {
+public class Client implements Callable<Stat>, Serializable, HazelcastInstanceAware {
+
+    private static final long serialVersionUID = 42L;
 
     private int id;
-    private String address;
     private long min;
     private long max;
+    private String address;
 
     // TODO should be injected
-    transient DB db;
-    private transient Benchmark benchmark;
+    private transient DB db;
+    //private transient Benchmark benchmark;
 
-    private volatile boolean complete = false;
-    private int throttle = -1;
+    private boolean complete = false;
+    private long done = 0;
+    private double throttle;
     private long throttleTick;
 
-    private List<Double> getLatency = new ArrayList<>();
-    private List<Double> putLatency = new ArrayList<>();
-    private List<Double> deleteLatency = new ArrayList<>();
+    private Stat stat;
 
-    public Client(int id, String address, long min, long max, DB db, Benchmark benchmark) {
+    private transient HazelcastInstance instance;
+
+    public Client(int id, long min, long max, String address) {
         this.id = id;
         this.address = address;
         this.min = min;
         this.max = max;
-        this.db = db;
-        this.benchmark = benchmark;
 
-        int t = Config.getThrottle() * 1000; // ops/ms
-        this.throttle = t >= 0 ?  (t / Config.getClients()) : -1; // ops/ms/client
+        double t = (double) Config.getThrottle() / 1000.0; // ops/ms
+        this.throttle = t >= 0 ?  (t / (double) Config.getClients()) : -1.0; // ops/ms/client
         this.throttleTick = (long)(1000000.0 / throttle); // ns
     }
 
-    @Override
-    public void run() {
+    private void loadConfig() {
+        ReplicatedMap<String, String> config = instance.getReplicatedMap("config");
+
+    }
+
+    /**
+     * DB interface implementation loader
+     *
+     * @return DB instance
+     */
+    private DB loadDB() {
+        ClassLoader classLoader = Client.class.getClassLoader();
+        DB db = null;
+        try {
+            Class dbclass = classLoader.loadClass(Config.getDBName());
+            db = (DB) dbclass.newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return db;
+    }
+
+    public void load() {
         db.init(address);
+        byte[] v = new byte[Config.getDataSize()];
+        new Random().nextBytes(v);
+        for (long i = min; i <= max; i++) {
+            Map.Entry entry = db.cast(i, v);
+            db.put(entry.getKey(), entry.getValue());
+        }
+    }
+
+    @Override
+    public Stat call() {
+        db = loadDB();
+        db.init(address);
+
         float get = Config.getGetProportion();
         float put = get + Config.getPutProportion();
         float delete = put + Config.getRemoveProportion();
 
         try {
-            benchmark.barrier.await();
+            benchmark.await();
         } catch (InterruptedException e) {
-            System.err.println("Client #" + id + " was interrupted while waiting on barrier");
+            System.err.println("Client #" + id + " was interrupted while waiting on barrier.");
             e.printStackTrace();
         }
 
@@ -57,6 +98,17 @@ public class Client implements Runnable, Serializable {
         Random random = new Random();
         byte[] v = new byte[Config.getDataSize()];
         new Random().nextBytes(v);
+
+        // let clients start with random delay
+        if (throttle > 0 && throttle <= 1.0) {
+            long randomdelay = random.nextInt((int)throttle);
+            long deadline = System.nanoTime() + randomdelay;
+            long now;
+            while ((now = System.nanoTime()) < deadline) {
+                LockSupport.parkNanos(deadline - now);
+            }
+        }
+
         long start = System.nanoTime();
 
         while (true) {
@@ -84,53 +136,23 @@ public class Client implements Runnable, Serializable {
                 s = System.nanoTime();
                 db.remove(entry.getKey());
                 e = System.nanoTime();
-                benchmark.deleteLatency.add( (e - s) / 1000000.0 );
+                benchmark.removeLatency.add( (e - s) / 1000000.0 );
             }
 
             benchmark.finished.incrementAndGet();
+            done++;
             if (complete) {
-                return;
+                return stat;
             }
             throttle(start);
 
-
-//            db.data.forEach((k,v) -> {
-//                double r = Math.random();
-//                long s, e;
-//                if (r <= get) {
-//                    s = System.nanoTime();
-//                    db.get(k);
-//                    e = System.nanoTime();
-//                    benchmark.getLatency.add( (e - s) / 1000000.0 );
-//                }
-//
-//                else if (r <= put) {
-//                    s = System.nanoTime();
-//                    db.put(k, v);
-//                    e = System.nanoTime();
-//                    benchmark.putLatency.add( (e - s) / 1000000.0 );
-//                }
-//
-//                else if (r <= remove) {
-//                    s = System.nanoTime();
-//                    db.remove(k);
-//                    e = System.nanoTime();
-//                    benchmark.deleteLatency.add( (e - s) / 1000000.0 );
-//                }
-//
-//                benchmark.finished.incrementAndGet();
-//                if (complete) {
-//                    return;
-//                }
-//                throttle(start);
-//            });
         }
 
     }
 
     private void throttle(long startTime) {
         if (throttle > 0) {
-            long deadline = startTime + benchmark.finished.get() * throttleTick;
+            long deadline = startTime + done * throttleTick;
             long now;
             while ((now = System.nanoTime()) < deadline) {
                 LockSupport.parkNanos(deadline - now);
@@ -151,4 +173,13 @@ public class Client implements Runnable, Serializable {
         }
     }
 
+    @Override
+    public void setHazelcastInstance(HazelcastInstance instance) {
+        this.instance = instance;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Client id[%d] key[%d-%d] address[%s]", id, min, max, address);
+    }
 }

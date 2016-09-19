@@ -16,29 +16,29 @@ public abstract class Configuration {
         this.configFile = new File(filename);
     }
 
-    public String getProperty(String propertyName, String defaultValue) {
-        String result = getProperty(propertyName);
+    public String getProperty(String name, String defaultValue) {
+        String result = getProperty(name);
         if (result == null) {
-            System.err.printf("Missing property %s in %s\n", propertyName, properties.keySet());
+            System.err.printf("Missing property %s in %s\n", name, properties.keySet());
             return defaultValue;
         }
         return result;
     }
 
-    public String getRequiredProperty(String propertyName) {
-        String result = getProperty(propertyName);
+    public String getRequiredProperty(String name) {
+        String result = getProperty(name);
         if (result == null) {
-            throw new RuntimeException("Missing property " + propertyName);
+            throw new RuntimeException("Missing property " + name);
         }
         return result;
     }
 
-    public boolean getFlag(String property, boolean defaultValue) {
-        return Boolean.parseBoolean(getProperty(property, String.valueOf(defaultValue)));
+    public boolean getFlag(String name, boolean defaultValue) {
+        return Boolean.parseBoolean(getProperty(name, String.valueOf(defaultValue)));
     }
 
-    public int getIntProperty(String propertyName, int defaultValue) {
-        return Integer.parseInt(getProperty(propertyName, String.valueOf(defaultValue)));
+    public int getIntProperty(String name, int defaultValue) {
+        return Integer.parseInt(getProperty(name, String.valueOf(defaultValue)));
     }
 
     public long getLongProperty(String name, long defaultValue) {
@@ -54,18 +54,18 @@ public abstract class Configuration {
         return properties;
     }
 
-    private String getProperty(String propertyName) {
-        if (System.getProperty(propertyName) != null) {
-            System.err.printf("Reading %s from system properties\n", propertyName);
-            return System.getProperty(propertyName);
+    private String getProperty(String name) {
+        if (System.getProperty(name) != null) {
+            System.err.printf("Reading %s from system properties\n", name);
+            return System.getProperty(name);
         }
-        if (System.getenv(propertyName.replace('.', '_')) != null) {
-            System.err.printf("Reading %s from environment\n", propertyName);
-            return System.getenv(propertyName.replace('.', '_'));
+        if (System.getenv(name.replace('.', '_')) != null) {
+            System.err.printf("Reading %s from environment\n", name);
+            return System.getenv(name.replace('.', '_'));
         }
 
         ensureConfigurationIsFresh();
-        return properties.getProperty(propertyName);
+        return properties.getProperty(name);
     }
 
     private synchronized void ensureConfigurationIsFresh() {

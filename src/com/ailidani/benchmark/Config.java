@@ -31,7 +31,7 @@ public class Config extends Configuration {
     }
 
     public static int getDataSize() {
-        return instance.getIntProperty("datasize", 100);
+        return instance.getIntProperty("datasize", 100 /* bytes */);
     }
 
     public static long getOperationCount() {
@@ -43,7 +43,7 @@ public class Config extends Configuration {
     }
 
     public static int getTotalTime() {
-        return instance.getIntProperty("totalTime", 60 /* seconds */);
+        return instance.getIntProperty("totaltime", 60 /* seconds */);
     }
 
     public static int getThrottle() {

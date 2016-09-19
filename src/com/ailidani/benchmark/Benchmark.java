@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class Benchmark {
 
-    protected DB db;
     protected long recordcount;
     protected long operationcount;
     protected long snapshotcount;
@@ -21,15 +20,12 @@ public abstract class Benchmark {
 
     protected Client[] clients;
 
-    protected CountDownLatch barrier;
-
     protected AtomicInteger finished = new AtomicInteger(0);
     protected List<Double> getLatency = Collections.synchronizedList(new ArrayList<>(10000));
     protected List<Double> putLatency = Collections.synchronizedList(new ArrayList<>(10000));
-    protected List<Double> deleteLatency = Collections.synchronizedList(new ArrayList<>(10000));
+    protected List<Double> removeLatency = Collections.synchronizedList(new ArrayList<>(10000));
 
     public void init() {
-        db = loadDB();
         recordcount = Config.getRecordCount();
         operationcount = Config.getOperationCount();
         snapshotcount = Config.getSnapshotCount();
@@ -38,23 +34,24 @@ public abstract class Benchmark {
         removep = Config.getRemoveProportion();
         interval = Config.getInterval();
         totalTime = Config.getTotalTime();
-        barrier = new CountDownLatch(1);
     }
 
-    private DB loadDB() {
-        ClassLoader classLoader = CentralizedBenchmark.class.getClassLoader();
-        DB db = null;
-        try {
-            Class dbclass = classLoader.loadClass(Config.getDBName());
-            db = (DB) dbclass.newInstance();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return db;
-    }
 
+    /**
+     * Barrier, cluster-wide synchronization aid that allows one or more threads to wait until every client is ready.
+     *
+     * @throws InterruptedException handles times out
+     */
+    public abstract void await() throws InterruptedException;
+
+    /**
+     * Pre-load some data into DB.
+     */
     public abstract void load();
 
+    /**
+     * Main body.
+     */
     public abstract void run();
 
     public abstract void shutdown();
