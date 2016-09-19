@@ -11,10 +11,10 @@ public class RemoteClient extends Client implements HazelcastInstanceAware {
 
     @Override
     protected void init() {
-        super.init();
         Config config = new Config();
         config.fromMap(instance.getReplicatedMap(Config.MAP_NAME));
         setConfig(config);
+        super.init();
     }
 
     @Override

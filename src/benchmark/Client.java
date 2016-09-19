@@ -18,8 +18,9 @@ public abstract class Client implements Callable<Stats>, Serializable {
     protected long max;
     protected String address;
 
-    protected transient Config config;
-    protected transient DB db;
+    private transient Config config;
+    private transient DB db;
+    private transient KeyGenerator keys;
 
     private transient Stats stats = new Stats();
     private transient long startTime;
@@ -122,6 +123,9 @@ public abstract class Client implements Callable<Stats>, Serializable {
             latency.put(REMOVE, Collections.synchronizedList(new ArrayList<>(10000)));
         }
 
+        keys = new KeyGenerator(min, max, config.getDistribution());
+        keys.setParameter(config.getParameter());
+
         double t = (double) config.getThrottle() / 1000.0; // ops/ms
         this.throttle = t >= 0 ?  (t / (double) config.getClients()) : -1.0; // ops/ms/client
         this.throttleTick = (long)(1000000.0 / throttle); // ns
@@ -139,7 +143,6 @@ public abstract class Client implements Callable<Stats>, Serializable {
         Timer ftimer = new Timer();
         ftimer.scheduleAtFixedRate(new FinishTimer(), config.getInterval(), config.getInterval());
 
-        long n = max - min + 1;
         Random random = new Random();
         byte[] v = new byte[config.getDataSize()];
         new Random().nextBytes(v);
@@ -165,7 +168,7 @@ public abstract class Client implements Callable<Stats>, Serializable {
 
         while (true) {
 
-            long k = random.nextLong() % n + min;
+            long k = keys.next();
             Map.Entry entry = db.cast(k, v);
 
             double r = Math.random();

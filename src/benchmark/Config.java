@@ -91,6 +91,10 @@ public final class Config {
         return Float.parseFloat(get(name, String.valueOf(value)));
     }
 
+    private double getDouble(String name, double value) {
+        return Double.parseDouble(get(name, String.valueOf(value)));
+    }
+
     public Properties get() {
         return properties;
     }
@@ -109,6 +113,14 @@ public final class Config {
 
     public long getRecordCount() {
         return getLong("recordcount", 1000);
+    }
+
+    public KeyGenerator.Distribution getDistribution() {
+        return KeyGenerator.Distribution.valueOf(get("distribution", "Uniform"));
+    }
+
+    public double getParameter() {
+        return getDouble("parameter", 0.2);
     }
 
     public int getDataSize() {
