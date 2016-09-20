@@ -1,5 +1,8 @@
 package benchmark;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -183,9 +186,13 @@ public class KeyGenerator {
     public static void main(String[] args) {
         long min = 0;
         long max = 1000;
-        KeyGenerator keys = new KeyGenerator(min, max, Distribution.Uniform);
+        //KeyGenerator keys = new KeyGenerator(min, max, Distribution.Uniform);
+        KeyGenerator generator = new KeyGenerator(min, max, Distribution.Hotspot);
+        List<Long> keys = new ArrayList<>();
         for (long i = min; i < max; i++) {
-            System.out.println(keys.next());
+            keys.add(generator.next());
         }
+        Collections.sort(keys);
+        System.out.println(keys);
     }
 }
