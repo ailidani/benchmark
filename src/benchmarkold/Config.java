@@ -1,19 +1,19 @@
-package benchmark;
+package benchmarkold;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public final class Config implements Serializable {
+public final class Config {
 
-    public static final String FILE_NAME = "benchmark.properties";
+    public static final String FILE_NAME = "benchmarkold.properties";
     public static final String MAP_NAME = "config";
-    public static final String GROUP_NAME = "benchmark";
-    public static final String GROUP_PASS = "benchmark";
+    public static final String GROUP_NAME = "benchmarkold";
+    public static final String GROUP_PASS = "benchmarkold";
+    public static final String BENCHMARK = "benchmarkold";
 
     private final Properties properties = new Properties();
 
@@ -66,7 +66,7 @@ public final class Config implements Serializable {
         }
         return value;
     }
-
+    
     private String getRequired(String name) {
         String result = properties.getProperty(name);
         if (result == null) {
@@ -74,7 +74,7 @@ public final class Config implements Serializable {
         }
         return result;
     }
-
+    
     private boolean getFlag(String name, boolean value) {
         return Boolean.parseBoolean(get(name, String.valueOf(value)));
     }
@@ -104,11 +104,11 @@ public final class Config implements Serializable {
     }
 
     public String getDB() {
-        return get("db", "benchmark.HazelcastDB");
+        return get("db", "benchmarkold.HazelcastDB");
     }
 
-    public Mode getBenchmarkMode() {
-        return Mode.valueOf(get("benchmark", "CENTRALIZED"));
+    public BenchmarkMode getBenchmarkMode() {
+        return BenchmarkMode.valueOf(get("benchmarkold", "CENTRALIZED"));
     }
 
     public long getRecordCount() {
@@ -150,6 +150,16 @@ public final class Config implements Serializable {
     public String getAddress() {
         return get("address", "127.0.0.1");
     }
+
+    /*
+    public String getGroupName() {
+        return get("group.name", "test");
+    }
+
+    public String getGroupPassword() {
+        return get("group.password", "test");
+    }
+    */
 
     public float getGetProportion() {
         float p = getFloat("getproportion", 0);

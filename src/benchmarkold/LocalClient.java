@@ -1,10 +1,6 @@
-package benchmark;
+package benchmarkold;
 
 public class LocalClient extends Client {
-
-    public LocalClient(int id, long min, long max, String address) {
-        super(id, min, max, address);
-    }
 
     @Override
     protected void ready() throws InterruptedException {
@@ -16,5 +12,4 @@ public class LocalClient extends Client {
             throw e;
         }
     }
-
 }

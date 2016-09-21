@@ -1,6 +1,6 @@
-package benchmark;
+package benchmarkold;
 
-enum Operation {
+public enum Operation {
 
     /**
      * Read

@@ -1,4 +1,4 @@
-package benchmark;
+package benchmarkold;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
@@ -9,8 +9,12 @@ public class RemoteClient extends Client implements HazelcastInstanceAware {
 
     private HazelcastInstance instance;
 
-    public RemoteClient(int id, long min, long max, String address) {
-        super(id, min, max, address);
+    @Override
+    protected void init() {
+        Config config = new Config();
+        config.fromMap(instance.getReplicatedMap(Config.MAP_NAME));
+        setConfig(config);
+        super.init();
     }
 
     @Override

@@ -1,4 +1,4 @@
-package benchmark;
+package benchmarkold;
 
 public enum BenchmarkMode {
     CENTRALIZED,

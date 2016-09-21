@@ -1,4 +1,4 @@
-package benchmark;
+package benchmarkold;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -13,7 +13,7 @@ public class Coordinator {
     private static Coordinator coordinator = new Coordinator();
 
     private Config config;
-    private Mode mode;
+    private BenchmarkMode mode;
     private Client[] clients;
 
     /**
@@ -47,8 +47,12 @@ public class Coordinator {
                 ready = new CountDownLatch(n);
                 start = new CountDownLatch(1);
                 for (int i = 0; i < n; i++) {
-                    clients[i] = new LocalClient(i, 1, config.getRecordCount(), config.getAddress());
+                    clients[i] = new LocalClient();
+                    clients[i].setId(i);
+                    clients[i].setAddress(config.getAddress());
                     clients[i].setConfig(config);
+                    clients[i].setMin(1);
+                    clients[i].setMax(config.getRecordCount());
                 }
                 break;
             case DISTRIBUTED:
@@ -63,8 +67,11 @@ public class Coordinator {
                 dstart = instance.getCountDownLatch("start");
                 dstart.trySetCount(1);
                 for (int i = 0; i < n; i++) {
-                    clients[i] = new RemoteClient(i, 1, config.getRecordCount(), config.getAddress());
-                    clients[i].setConfig(config);
+                    clients[i] = new RemoteClient();
+                    clients[i].setId(i);
+                    clients[i].setAddress(config.getAddress());
+                    clients[i].setMin(1);
+                    clients[i].setMax(config.getRecordCount());
                 }
                 break;
             default:
@@ -96,54 +103,18 @@ public class Coordinator {
 
     public void load() {
         System.out.printf("Loading %d keys into DB %s with data size %d... \n", config.getRecordCount(), config.getDB(), config.getDataSize());
-        int n = config.getClients();
-        clients = new Client[n];
-        long interval = config.getRecordCount() / n;
-        switch (mode) {
-            case CENTRALIZED:
-                executor = Executors.newFixedThreadPool(n);
-                break;
-            case DISTRIBUTED:
-                com.hazelcast.config.Config hzconfig = new com.hazelcast.config.Config();
-                hzconfig.setLiteMember(true);
-                hzconfig.getGroupConfig().setName(Config.GROUP_NAME).setPassword(Config.GROUP_PASS);
-                instance = Hazelcast.newHazelcastInstance(hzconfig);
-                instance.getReplicatedMap(Config.MAP_NAME).putAll(config.asMap());
-                executor = instance.getExecutorService("executor");
-                break;
-        }
-
-        for (int i = 0; i < n; i++) {
-            long start = i * interval;
-            long end = start + interval;
-            clients[i] = new LoadClient(i, start, end, config.getAddress());
-            clients[i].setConfig(config);
-        }
+        long startTime = System.nanoTime();
 
         for (Client client : clients) {
-            futures.put(client, executor.submit(client));
+            executor.submit(client);
         }
 
-        Stats stats = new Stats();
-        for (Client client : clients) {
-            try {
-                Stats result = futures.get(client).get();
-                stats.add(result);
-            } catch (InterruptedException e) {
-                // ignore
-            } catch (ExecutionException e) {
-                System.err.printf("%s has error.", client);
-            }
-        }
-
-        System.out.println(stats);
-        System.out.printf("Overall : %s\n", stats.overall());
+        // todo ailidani how to wait till finished?
 
     }
 
     public void run() {
-        init();
-        System.out.println("Running benchmark for " + config.getTotalTime() + " seconds... ");
+        System.out.println("Running benchmarkold for " + config.getTotalTime() + " seconds... ");
         long startTime = System.nanoTime();
 
         for (Client client : clients) {
@@ -169,7 +140,7 @@ public class Coordinator {
         }
 
         System.out.println(stats);
-        System.out.printf("Overall : %s\n", stats.overall());
+        System.out.printf("Overall Throughput = %f (ops/s)\n", (double)stats.getOperationCount() / (double)config.getTotalTime());
 
     }
 
@@ -182,13 +153,8 @@ public class Coordinator {
 
     public static void main(String [] args) {
         Coordinator coordinator = Coordinator.get();
-
-        if (args.length > 0 && args[0].equalsIgnoreCase("load")) {
-            coordinator.load();
-        } else {
-            coordinator.run();
-        }
-
+        coordinator.init();
+        coordinator.run();
         coordinator.shutdown();
         System.exit(0);
     }

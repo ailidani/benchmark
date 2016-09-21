@@ -1,71 +1,46 @@
 package benchmark;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 public class Stat implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
-    protected long count = 0;
-    protected List<Double> throughput = new ArrayList<>();
-    protected List<Double> latency = new ArrayList<>();
-    protected List<Double> latency95 = new ArrayList<>();
-    protected List<Double> latency99 = new ArrayList<>();
-    protected List<Double> latencymin = new ArrayList<>();
-    protected List<Double> latencymax = new ArrayList<>();
+    private long count = 0;
+    private double throughput = 0; // op/s
+    private double latency = -1; // ms
+    private double latency95 = -1;
+    private double latency99 = -1;
+    private double latencymin = -1;
+    private double latencymax = -1;
+
+    public boolean isEmpty() {
+        return count == 0 && throughput == 0;
+    }
 
     public void add(Stat that) {
-        if (that.isEmpty()) { return; }
+        if (that.isEmpty()) return;
         if (this.isEmpty()) {
             this.count = that.count;
             this.throughput = that.throughput;
             this.latency = that.latency;
+            this.latency95 = that.latency95;
             this.latency99 = that.latency99;
+            this.latencymin = that.latencymin;
             this.latencymax = that.latencymax;
         } else {
             this.count += that.count;
-            int n = that.throughput.size();
-            for (int i = 0; i < n; i++) {
-                if (i > this.throughput.size() - 1) {
-                    this.throughput.add(that.throughput.get(i));
-                    continue;
-                }
-                this.throughput.set(i, this.throughput.get(i) + that.throughput.get(i));
-            }
-            n = that.latency.size();
-            for (int i = 0; i < n; i++) {
-                if (i > this.latency.size() - 1) {
-                    this.latency.add(that.latency.get(i));
-                    continue;
-                }
-                this.latency.set(i, (this.latency.get(i) + that.latency.get(i)) / 2.0);
-            }
-            n = that.latency99.size();
-            for (int i = 0; i < n; i++) {
-                if (i > this.latency99.size() - 1) {
-                    this.latency99.add(that.latency99.get(i));
-                    continue;
-                }
-                this.latency99.set(i, max(this.latency99.get(i), that.latency99.get(i)));
-            }
-            n = that.latencymax.size();
-            for (int i = 0; i < n; i++) {
-                if (i > this.latencymax.size() - 1) {
-                    this.latencymax.add(that.latencymax.get(i));
-                    continue;
-                }
-                this.latencymax.set(i, max(this.latencymax.get(i), that.latencymax.get(i)));
-            }
+            this.throughput += that.throughput;
+            this.latency = (this.latency + that.latency) / 2.0;
+            this.latency95 = max(this.latency95, that.latency95);
+            this.latency99 = max(this.latency99, that.latency99);
+            this.latencymin = min(this.latencymin, that.latencymin);
+            this.latencymax = max(this.latencymax, that.latencymax);
         }
-
-    }
-
-    public boolean isEmpty() {
-        return count == 0 && throughput.isEmpty();
     }
 
     public static Stat aggregate(Stat... stats) {
@@ -74,6 +49,77 @@ public class Stat implements Serializable {
             result.add(stat);
         }
         return result;
+    }
+
+    public static Stat aggregate(Collection<Stat> stats) {
+        Stat result = new Stat();
+        for (Stat stat : stats) {
+            result.add(stat);
+        }
+        return result;
+    }
+
+    public long getCount() {
+        return count;
+    }
+
+    public Stat setCount(long count) {
+        this.count = count;
+        return this;
+    }
+
+    public double getThroughput() {
+        return throughput;
+    }
+
+    public Stat setThroughput(double throughput) {
+        this.throughput = throughput;
+        return this;
+    }
+
+    public double getLatency() {
+        return latency;
+    }
+
+    public Stat setLatency(double latency) {
+        this.latency = latency;
+        return this;
+    }
+
+    public double getLatency95() {
+        return latency95;
+    }
+
+    public Stat setLatency95(double latency95) {
+        this.latency95 = latency95;
+        return this;
+    }
+
+    public double getLatency99() {
+        return latency99;
+    }
+
+    public Stat setLatency99(double latency99) {
+        this.latency99 = latency99;
+        return this;
+    }
+
+    public double getLatencymin() {
+        return latencymin;
+    }
+
+    public Stat setLatencymin(double latencymin) {
+        this.latencymin = latencymin;
+        return this;
+    }
+
+    public double getLatencymax() {
+        return latencymax;
+    }
+
+    public Stat setLatencymax(double latencymax) {
+        this.latencymax = latencymax;
+        return this;
     }
 
     @Override
@@ -88,4 +134,5 @@ public class Stat implements Serializable {
         sb.append("\nmax latency = ").append(latencymax);
         return sb.toString();
     }
+
 }
