@@ -56,7 +56,7 @@ public class Coordinator {
                 hzconfig.setLiteMember(true);
                 hzconfig.getGroupConfig().setName(Config.GROUP_NAME).setPassword(Config.GROUP_PASS);
                 instance = Hazelcast.newHazelcastInstance(hzconfig);
-                instance.getReplicatedMap(Config.MAP_NAME).putAll(config.asMap());
+                //instance.getReplicatedMap(Config.MAP_NAME).putAll(config.asMap());
                 executor = instance.getExecutorService("executor");
                 dready = instance.getCountDownLatch("ready");
                 dready.trySetCount(n);
@@ -132,7 +132,7 @@ public class Coordinator {
             } catch (InterruptedException e) {
                 // ignore
             } catch (ExecutionException e) {
-                System.err.printf("%s has error.", client);
+                System.err.printf("%s has error.\n", client);
             }
         }
 
@@ -164,7 +164,7 @@ public class Coordinator {
             } catch (InterruptedException e) {
                 // ignore
             } catch (ExecutionException e) {
-                System.err.printf("%s has error.", client);
+                System.err.printf("%s has error.\n", client);
             }
         }
 

@@ -16,6 +16,7 @@ public class RemoteClient extends Client implements HazelcastInstanceAware {
     @Override
     protected void ready() throws InterruptedException {
         instance.getCountDownLatch("ready").countDown();
+        System.out.printf("%s is ready\n", this);
         try {
             instance.getCountDownLatch("start").await(10, TimeUnit.MINUTES);
         } catch (InterruptedException e) {

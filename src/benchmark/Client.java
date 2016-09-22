@@ -21,11 +21,12 @@ public abstract class Client implements Callable<Stats>, Serializable {
     protected transient DB db;
     protected transient KeyGenerator generator;
 
-    protected transient Stats stats = new Stats();
-    protected transient AtomicBoolean complete = new AtomicBoolean(false);
-    private transient double throttle = -1;
+    protected transient Stats stats;
+    protected transient AtomicBoolean complete;
+    private transient double throttle;
     private transient long throttleTick;
     protected transient byte[] data;
+
 
     public Client(int id, long min, long max, String address) {
         this.id = id;
@@ -51,6 +52,9 @@ public abstract class Client implements Callable<Stats>, Serializable {
     }
 
     protected void init() {
+        stats = new Stats();
+        complete = new AtomicBoolean(false);
+
         db = loadDB();
         db.init(address, config.get());
 
@@ -63,6 +67,8 @@ public abstract class Client implements Callable<Stats>, Serializable {
 
         data = new byte[config.getDataSize()];
         ThreadLocalRandom.current().nextBytes(data);
+
+        System.out.printf("%s is initiated\n", this);
     }
 
     protected abstract void ready() throws InterruptedException;
@@ -118,6 +124,7 @@ public abstract class Client implements Callable<Stats>, Serializable {
         float remove = put + config.getRemoveProportion();
 
         ready();
+
         delay();
 
         Timer ftimer = new Timer();
@@ -166,7 +173,7 @@ public abstract class Client implements Callable<Stats>, Serializable {
 
     @Override
     public String toString() {
-        return String.format("Client id[%d] key[%d-%d] address[%s]\n", id, min, max, address);
+        return String.format("Client id[%d] key[%d-%d] address[%s] ", id, min, max, address);
     }
 
 }

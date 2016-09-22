@@ -43,6 +43,8 @@ public class Stats implements Serializable, Iterable<Stat> {
         stat.setLatencymax(slice.get(n - 1));
         stats.add(stat);
         index = n;
+        System.out.printf("Client[] Elapsed time %s seconds ", elapsed);
+        System.out.printf("Throughput = %f (ops/s)\n", stat.getThroughput());
     }
 
     public boolean isEmpty() {

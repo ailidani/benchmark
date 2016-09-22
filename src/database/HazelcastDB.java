@@ -1,5 +1,6 @@
-package benchmark;
+package database;
 
+import benchmark.DB;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;

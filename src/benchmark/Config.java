@@ -104,7 +104,7 @@ public final class Config implements Serializable {
     }
 
     public String getDB() {
-        return get("db", "benchmark.HazelcastDB");
+        return get("db", "database.HazelcastDB");
     }
 
     public Mode getBenchmarkMode() {
