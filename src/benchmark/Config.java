@@ -108,7 +108,7 @@ public final class Config implements Serializable {
     }
 
     public Mode getBenchmarkMode() {
-        return Mode.valueOf(get("benchmark", "CENTRALIZED"));
+        return Mode.valueOf(get("mode", "CENTRALIZED"));
     }
 
     public long getRecordCount() {
