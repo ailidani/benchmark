@@ -26,3 +26,4 @@ Tasks List
 - [x] Distributed clients key overlap
 - [ ] Hierarchical key space
 - [ ] Client location assignment
+- [ ] Fix [Coordinated Omission Problem](https://www.youtube.com/watch?v=lJ8ydIuPFeU)
