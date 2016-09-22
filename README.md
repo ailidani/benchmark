@@ -25,3 +25,4 @@ Tasks List
 
 - [x] Distributed clients key overlap
 - [ ] Hierarchical key space
+- [ ] Client location assignment
