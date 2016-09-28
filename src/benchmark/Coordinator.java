@@ -40,6 +40,15 @@ public class Coordinator {
 
     public void init() {
         int n = config.getClients();
+        float p = config.getOverlap();
+        long size = config.getRecordCount();
+        /**
+         * |----------|~~~|
+         *            |----------|~~~|
+         *                       |----------|~~~|
+         * |------------------------------------|
+         */
+        long shift = (long) (size * (1 - p) / n);
         clients = new Client[n];
         switch (mode) {
             case CENTRALIZED:
@@ -47,7 +56,9 @@ public class Coordinator {
                 ready = new CountDownLatch(n);
                 start = new CountDownLatch(1);
                 for (int i = 0; i < n; i++) {
-                    clients[i] = new LocalClient(i, 1, config.getRecordCount(), config.getAddress());
+                    long min = 1 + i * shift;
+                    long max = min + size - 1;
+                    clients[i] = new LocalClient(i, min, max, config.getAddress());
                     clients[i].setConfig(config);
                 }
                 break;
@@ -63,7 +74,9 @@ public class Coordinator {
                 dstart = instance.getCountDownLatch("start");
                 dstart.trySetCount(1);
                 for (int i = 0; i < n; i++) {
-                    clients[i] = new RemoteClient(i, 1, config.getRecordCount(), config.getAddress());
+                    long min = 1 + i * shift;
+                    long max = min + size - 1;
+                    clients[i] = new RemoteClient(i, min, max, config.getAddress());
                     clients[i].setConfig(config);
                 }
                 break;

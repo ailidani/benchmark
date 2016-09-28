@@ -104,7 +104,7 @@ public final class Config implements Serializable {
     }
 
     public String getDB() {
-        return get("db", "database.HazelcastDB");
+        return get("db", "database.SimulatorDB");
     }
 
     public Mode getBenchmarkMode() {
@@ -112,7 +112,9 @@ public final class Config implements Serializable {
     }
 
     public long getRecordCount() {
-        return getLong("recordcount", 1000);
+        long c = getLong("recordcount", 1000);
+        assert c >= 0 : "[ERROR] Config: recordcount cannot be negative";
+        return c;
     }
 
     public KeyGenerator.Distribution getDistribution() {
@@ -121,6 +123,12 @@ public final class Config implements Serializable {
 
     public double getParameter() {
         return getDouble("parameter", 0.2);
+    }
+
+    public float getOverlap() {
+        float overlap = getFloat("overlap", 1.0f);
+        if (overlap < 0 || overlap > 1) overlap = 1.0f;
+        return overlap;
     }
 
     public int getDataSize() {
