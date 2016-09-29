@@ -23,7 +23,7 @@
 <a id="distributed-benchmark" class="anchor" href="#distributed-benchmark" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Distributed Benchmark</h1>
 
 <h2>
-<a id="quick-overview-of-db" class="anchor" href="#quick-overview-of-db" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Quick overview of DB</h2>
+<a id="quick-overview" class="anchor" href="#quick-overview" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Quick overview</h2>
 
 <p>Distributed Benchmark is a micro-benchmark framework similar to YCSB, with more features and fine control over a cluster of clients running on multiple machines.
 DB code base is kept as simple and compact as possible, so that anyone can easily extend the system.</p>
@@ -95,6 +95,108 @@ DB code base is kept as simple and compact as possible, so that anyone can easil
 <li>[ ] Fix <a href="https://www.youtube.com/watch?v=lJ8ydIuPFeU">Coordinated Omission Problem</a>
 </li>
 </ul>
+
+<h2>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting Started</h2>
+
+<p>Start Coordinator</p>
+
+<div class="highlight highlight-source-shell"><pre>$ bin/coordinator.sh</pre></div>
+
+<p>Start Workers</p>
+
+<div class="highlight highlight-source-shell"><pre>$ bin/worker.sh</pre></div>
+
+<p>Stop Coordinator and Worker in current location</p>
+
+<div class="highlight highlight-source-shell"><pre>$ bin/stop.sh</pre></div>
+
+<h3>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration</h3>
+
+<p>The configuration file is a single properties file includes everything the benchmark needs.</p>
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Default Value</th>
+<th>Info</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>db</td>
+<td>database.SimulatorDB</td>
+<td>User implemented DB interface, extends one of {DB, StringDB, etc}</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>CENTRALIZED</td>
+<td>Running mode, CENTRALIZED or DISTRIBUTED</td>
+</tr>
+<tr>
+<td>recordcount</td>
+<td>1000</td>
+<td>Number of keys each client access</td>
+</tr>
+<tr>
+<td>datasize</td>
+<td>100</td>
+<td>Random bytes</td>
+</tr>
+<tr>
+<td>getproportion</td>
+<td>0</td>
+<td>Get operation</td>
+</tr>
+<tr>
+<td>putproportion</td>
+<td>1</td>
+<td>Put operation</td>
+</tr>
+<tr>
+<td>removeproportion</td>
+<td>0</td>
+<td>Remove operation</td>
+</tr>
+<tr>
+<td>distribution</td>
+<td>Uniform</td>
+<td>Distribution of the keys {Constant, Sequence, Uniform, Hotspot, Zipfian}</td>
+</tr>
+<tr>
+<td>overlap</td>
+<td>1.0</td>
+<td>Overlap fraction between client's accessing keys</td>
+</tr>
+<tr>
+<td>interval</td>
+<td>1.0</td>
+<td>Stat result interval time in ms</td>
+</tr>
+<tr>
+<td>totaltime</td>
+<td>60</td>
+<td>Seconds</td>
+</tr>
+<tr>
+<td>clients</td>
+<td>10</td>
+<td>Number of clients</td>
+</tr>
+<tr>
+<td>throttle</td>
+<td>-1</td>
+<td>Target throughput throttle operations/second</td>
+</tr>
+<tr>
+<td>address</td>
+<td>127.0.0.1</td>
+<td>DB addresses</td>
+</tr>
+</tbody>
+</table>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/ailidani/benchmark">Benchmark</a> is maintained by <a href="https://github.com/ailidani">ailidani</a>.</span>
