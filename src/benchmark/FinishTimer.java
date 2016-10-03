@@ -10,7 +10,8 @@ public class FinishTimer extends TimerTask {
 
     public FinishTimer(Client client) {
         this.client = client;
-        this.deadline = (client.config().getTotalTime() * 1000) / client.config().getInterval();
+        int time = client.config().getTotalTime() + client.config().getWarmupTime();
+        this.deadline = (time * 1000) / client.config().getInterval();
     }
 
     @Override

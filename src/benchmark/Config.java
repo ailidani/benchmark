@@ -147,6 +147,10 @@ public final class Config implements Serializable {
         return getInt("totaltime", 60 /* seconds */);
     }
 
+    public int getWarmupTime() {
+        return getInt("warmup", 60 /* seconds */);
+    }
+
     public int getThrottle() {
         return getInt("throttle", -1 /* ops/second */);
     }

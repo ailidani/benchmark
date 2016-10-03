@@ -27,6 +27,11 @@ public class RemoteClient extends Client implements HazelcastInstanceAware {
     }
 
     @Override
+    protected void publish(Stat stat) {
+
+    }
+
+    @Override
     public void setHazelcastInstance(HazelcastInstance instance) {
         this.instance = instance;
     }

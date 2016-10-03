@@ -73,6 +73,8 @@ public abstract class Client implements Callable<Stats>, Serializable {
 
     protected abstract void ready() throws InterruptedException;
 
+    protected abstract void publish(Stat stat);
+
     /**
      * Let clients start with random delay
      */
@@ -131,7 +133,7 @@ public abstract class Client implements Callable<Stats>, Serializable {
         ftimer.scheduleAtFixedRate(new FinishTimer(this), config.getInterval(), config.getInterval());
 
         Timer utimer = new Timer();
-        utimer.scheduleAtFixedRate(new UpdateTimer(stats), config.getInterval(), config.getInterval());
+        utimer.scheduleAtFixedRate(new UpdateTimer(this), config.getInterval(), config.getInterval());
 
         long startTime = System.nanoTime();
         long s, e;

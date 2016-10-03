@@ -1,5 +1,6 @@
 package benchmark;
 
+
 import java.util.*;
 
 /**
@@ -7,15 +8,16 @@ import java.util.*;
  */
 public class UpdateTimer extends TimerTask {
 
-    private Stats stats;
+    private Client client;
 
-    public UpdateTimer(Stats stats) {
-        this.stats = stats;
+    public UpdateTimer(Client client) {
+        this.client = client;
     }
 
     @Override
     public void run() {
-        stats.slice();
+        Stat stat = client.stats.slice();
+        client.publish(stat);
     }
 
 }

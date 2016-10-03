@@ -9,8 +9,10 @@ public class LoadClient extends Client {
     }
 
     @Override
-    protected void ready() throws InterruptedException {
-    }
+    protected void ready() throws InterruptedException { }
+
+    @Override
+    protected void publish(Stat stat) { }
 
     @Override
     public Stats call() throws Exception {

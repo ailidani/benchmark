@@ -17,4 +17,8 @@ public class LocalClient extends Client {
         }
     }
 
+    @Override
+    protected void publish(Stat stat) {
+        Coordinator.get().publish(stat);
+    }
 }

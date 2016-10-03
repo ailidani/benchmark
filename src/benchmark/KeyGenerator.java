@@ -180,4 +180,11 @@ public class KeyGenerator {
         }
     }
 
+    public static void main(String args[]) {
+        KeyGenerator generator = new KeyGenerator(1, 100, Distribution.Uniform);
+        for (int i = 0; i < 1000; i++) {
+            System.out.println(generator.next());
+        }
+    }
+
 }

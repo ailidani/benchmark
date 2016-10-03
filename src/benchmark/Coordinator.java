@@ -4,6 +4,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICountDownLatch;
 
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -27,11 +28,18 @@ public class Coordinator {
     private ICountDownLatch dstart;
 
     private HazelcastInstance instance;
+    private WebServer webServer;
 
     private Coordinator() {
         config = new Config();
         config.load();
         mode = config.getBenchmarkMode();
+        try {
+            webServer = new WebServer();
+            webServer.start();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
     }
 
     public static Coordinator get() {
@@ -107,6 +115,14 @@ public class Coordinator {
         start.await();
     }
 
+    /**
+     * Called by local client
+     * @param stat current interval stat
+     */
+    public void publish(Stat stat) {
+        this.webServer.sendToAll(String.valueOf(stat.getThroughput()));
+    }
+
     public void load() {
         System.out.printf("Loading %d keys into DB %s with data size %d... \n", config.getRecordCount(), config.getDB(), config.getDataSize());
         int n = config.getClients();
@@ -156,7 +172,7 @@ public class Coordinator {
 
     public void run() {
         init();
-        System.out.println("Running benchmark for " + config.getTotalTime() + " seconds... ");
+        System.out.println("Running benchmark for " + (config.getTotalTime() + config.getWarmupTime()) + " seconds... ");
         long startTime = System.nanoTime();
 
         for (Client client : clients) {

@@ -36,7 +36,9 @@ if [ "x$MAX_HEAP_SIZE" != "x" ]; then
         JAVA_OPTS="$JAVA_OPTS -Xmx${MAX_HEAP_SIZE}"
 fi
 
-export CLASSPATH=$BENCHMARK_HOME/lib/benchmark.jar:$BENCHMARK_HOME/lib/hazelcast-all-3.7.jar
+export CLASSPATH=$BENCHMARK_HOME/lib/benchmark.jar:$BENCHMARK_HOME/lib/hazelcast-all-3.7.jar:$BENCHMARK_HOME/benchmark.properties
+
+JAVA_OPTS="$JAVA_OPTS -Dhazelcast.rest.enabled=true"
 
 echo "########################################"
 echo "# RUN_JAVA=$RUN_JAVA"

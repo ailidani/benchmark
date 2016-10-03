@@ -16,17 +16,17 @@ public class Stats implements Serializable, Iterable<Stat> {
     private transient Vector<Double> latencies = new Vector<>();
     private transient int index = 0;
 
-    public void add(double latency /* ms */) {
+    public synchronized void add(double latency /* ms */) {
         this.latencies.add(latency);
     }
 
-    public void slice() {
+    public synchronized Stat slice() {
         List<Double> slice = new ArrayList<>(latencies.subList(index, latencies.size()));
         Stat stat = new Stat();
         int n = slice.size();
         if (n == 0) {
             stats.add(stat);
-            return;
+            return stat;
         }
         Collections.sort(slice);
         double sum /* ms */ = 0;
@@ -45,6 +45,7 @@ public class Stats implements Serializable, Iterable<Stat> {
         index = n;
         System.out.printf("Client[] Elapsed time %s seconds ", elapsed);
         System.out.printf("Throughput = %f (ops/s)\n", stat.getThroughput());
+        return stat;
     }
 
     public boolean isEmpty() {

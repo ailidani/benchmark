@@ -6,18 +6,19 @@ Quick overview
 Distributed Benchmark is a micro-benchmark framework similar to YCSB, with more features and fine control over a cluster of clients running on multiple machines.
 DB code base is kept as simple and compact as possible, so that anyone can easily extend the system.
 
-
-|                        | Distributed Benchmark |     YCSB     |
-|------------------------|:---------------------:|:------------:|
-| Multiple Clients       |           ✓           |       ✓      |
-| Distributed Clients    |           ✓           |              |
-| Distributed Loadings   |           ✓           |              |
-| Key Distributions      |           ✓           |       ✓      |
-| Key Overlap            |           ✓           |              |
-| Multiple Key Types     |           ✓           | Only Strings |
-| Throttled Throughput   |           ✓           |       ✓      |
-| Hierarchical Key Space |           ✓           |              |
-| Timeseries Granularity |           ✓           |       ✓      |
+|                        | OpenBenchmark |     YCSB     | YCSB++ | YCSB+T | UPB |
+|------------------------|:-------------:|:------------:|:------:|:------:|:---:|
+| Multiple Clients       |       ✓       |       ✓      |    ✓   |        |     |
+| Distributed Clients    |       ✓       |              |    ✓   |        |     |
+| Distributed Loadings   |       ✓       |              |    ✓   |        |     |
+| Key Distributions      |       ✓       |       ✓      |    ✓   |        |     |
+| Key Overlap            |       ✓       |              |        |        |     |
+| Multiple Key Types     |       ✓       | Only Strings |        |        |     |
+| Throttled Throughput   |       ✓       |       ✓      |    ✓   |        |     |
+| Hierarchical Key Space |       ✓       |              |        |        |     |
+| Timeseries Granularity |       ✓       |       ✓      |    ✓   |        |     |
+| Consistency Test       |               |              |    ✓   |        |     |
+| Multi-key Transactions |               |              |        |    ✓   |     |
 
 
 Tasks List
