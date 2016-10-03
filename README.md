@@ -1,5 +1,5 @@
-Distributed Benchmark
-=====================
+OpenBenchmark
+=============
 
 Quick overview
 --------------
