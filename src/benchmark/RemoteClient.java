@@ -5,11 +5,11 @@ import com.hazelcast.core.HazelcastInstanceAware;
 
 import java.util.concurrent.TimeUnit;
 
-public class RemoteClient extends Client implements HazelcastInstanceAware {
+class RemoteClient extends Client implements HazelcastInstanceAware {
 
     private HazelcastInstance instance;
 
-    public RemoteClient(int id, long min, long max, String address) {
+    RemoteClient(int id, long min, long max, String address) {
         super(id, min, max, address);
     }
 

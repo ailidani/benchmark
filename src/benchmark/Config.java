@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public final class Config implements Serializable {
+final class Config implements Serializable {
 
     public static final String FILE_NAME = "benchmark.properties";
     public static final String MAP_NAME = "config";
@@ -50,14 +50,15 @@ public final class Config implements Serializable {
     }
 
     private String get(String name, String value) {
+        name = name.toLowerCase();
         String result = System.getProperty(name);
         if (result != null) {
-            System.err.printf("Reading %s from system properties.\n", name);
+            System.err.printf("Reading %s source system properties.\n", name);
             return result;
         }
         result = System.getenv(name.replace('.', '_'));
         if (result != null) {
-            System.err.printf("Reading %s from environment.\n", name);
+            System.err.printf("Reading %s source environment.\n", name);
             return result;
         }
         result = properties.getProperty(name);
@@ -83,7 +84,7 @@ public final class Config implements Serializable {
         return Integer.parseInt(get(name, String.valueOf(value)));
     }
 
-    private long getLong(String name, long value) {
+    public long getLong(String name, long value) {
         return Long.parseLong(get(name, String.valueOf(value)));
     }
 
@@ -111,14 +112,39 @@ public final class Config implements Serializable {
         return Mode.valueOf(get("mode", "CENTRALIZED"));
     }
 
+    public void setLogLevel() {
+        switch (get("log.level")) {
+            case "trace":
+                Log.TRACE();
+                break;
+            case "debug":
+                Log.DEBUG();
+                break;
+            case "info":
+                Log.INFO();
+                break;
+            case "warn":
+                Log.WARN();
+                break;
+            case "error":
+                Log.ERROR();
+                break;
+            case "none":
+                Log.NONE();
+                break;
+            default:
+                Log.INFO();
+        }
+    }
+
     public long getRecordCount() {
         long c = getLong("recordcount", 1000);
         assert c >= 0 : "[ERROR] Config: recordcount cannot be negative";
         return c;
     }
 
-    public KeyGenerator.Distribution getDistribution() {
-        return KeyGenerator.Distribution.valueOf(get("distribution", "Uniform"));
+    public Generator.Distribution getDistribution() {
+        return Generator.Distribution.valueOf(get("distribution", "Uniform"));
     }
 
     public double getParameter() {
@@ -163,22 +189,19 @@ public final class Config implements Serializable {
         return get("address", "127.0.0.1");
     }
 
-    public float getGetProportion() {
-        float p = getFloat("getproportion", 0);
+    private double getProportion(Operation op) {
+        double p = getDouble("operation." + op.name(), 0);
         if (p < 0 || p > 1) p = 0;
         return p;
     }
 
-    public float getPutProportion() {
-        float p = getFloat("putproportion", 1);
-        if (p < 0 || p > 1) p = 0;
-        return p;
-    }
-
-    public float getRemoveProportion() {
-        float p = getFloat("removeproportion", 0);
-        if (p < 0 || p > 1) p = 0;
-        return p;
+    public Map<Operation, Double> getOperations() {
+        Map<Operation, Double> ops = new HashMap<>();
+        for (Operation op : Operation.values()) {
+            double p = getProportion(op);
+            if (p > 0) { ops.put(op, p); }
+        }
+        return ops;
     }
 
     public long getSnapshotCount() {

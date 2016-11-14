@@ -1,24 +1,45 @@
 package database;
 
-import benchmark.DB;
-import benchmark.KeyGenerator;
+import benchmark.KVDB;
+import benchmark.Status;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class SimulatorDB extends DB<Long, byte[]> {
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
-    Map<Long, byte[]> database = new HashMap<>();
+public class SimulatorDB implements KVDB<Long, byte[]> {
 
-    private KeyGenerator generator;
+    private Map<Long, byte[]> database = new HashMap<>();
 
-    private void sleep() {
-        try {
-            Thread.sleep(generator.next());
-        } catch (InterruptedException e) {
+    private static ReadWriteLock lock = new ReentrantReadWriteLock();
+    private static long[] delays = {200, 1000, 10000, 50000, 200000};
+    private static Random random = ThreadLocalRandom.current();
+    //private Generator generator;
+
+    private void delay() {
+        double p = Math.random();
+        int mod;
+        if (p < 0.9) {
+            mod = 0;
+        } else if (p < 0.99) {
+            mod = 1;
+        } else if (p < 0.9999) {
+            mod = 2;
+        } else {
+            mod = 3;
         }
+        final long baseDelayNs = MICROSECONDS.toNanos(delays[mod]);
+        final int delayRangeNs = (int) (MICROSECONDS.toNanos(delays[mod+1]) - baseDelayNs);
+        final long delayNs = baseDelayNs + random.nextInt(delayRangeNs);
+        long now = System.nanoTime();
+        final long deadline = now + delayNs;
+        do {
+            LockSupport.parkNanos(deadline - now);
+        } while ((now = System.nanoTime()) < deadline && !Thread.interrupted());
     }
 
     @Override
@@ -28,7 +49,6 @@ public class SimulatorDB extends DB<Long, byte[]> {
 
     @Override
     public void init(String address, Properties properties) {
-        generator = new KeyGenerator(0, 100, KeyGenerator.Distribution.Uniform);
     }
 
     @Override
@@ -36,24 +56,46 @@ public class SimulatorDB extends DB<Long, byte[]> {
 
     @Override
     public byte[] get(Long key) {
-        sleep();
-        return database.get(key);
+        delay();
+        lock.readLock().lock();
+        byte[] data = database.get(key);
+        lock.readLock().unlock();
+        return data;
     }
 
     @Override
     public byte[] put(Long key, byte[] value) {
-        sleep();
-        return database.put(key, value);
+        delay();
+        lock.writeLock().lock();
+        byte[] data = database.put(key, value);
+        lock.writeLock().unlock();
+        return data;
+    }
+
+    @Override
+    public Status set(Long key, byte[] value) {
+        delay();
+        lock.writeLock().lock();
+        database.put(key, value);
+        lock.writeLock().unlock();
+        return Status.OK;
+    }
+
+    @Override
+    public Status delete(Long key) {
+        delay();
+        lock.writeLock().lock();
+        database.remove(key);
+        lock.writeLock().unlock();
+        return Status.OK;
     }
 
     @Override
     public byte[] remove(Long key) {
-        sleep();
-        return database.remove(key);
-    }
-
-    @Override
-    public boolean snapshot() {
-        return false;
+        delay();
+        lock.writeLock().lock();
+        byte[] data = database.remove(key);
+        lock.writeLock().unlock();
+        return data;
     }
 }

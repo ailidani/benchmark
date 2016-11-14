@@ -1,13 +1,14 @@
 package benchmark;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Map;
+import java.util.Timer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
-public abstract class Client implements Callable<Stats>, Serializable {
+abstract class Client implements Callable<Stats>, Serializable {
 
     protected static final long serialVersionUID = 42L;
 
@@ -19,7 +20,9 @@ public abstract class Client implements Callable<Stats>, Serializable {
 
     // injected
     protected transient DB db;
-    protected transient KeyGenerator generator;
+    protected transient Generator generator;
+    private transient Timer updateTimer;
+    private transient Timer finishTimer;
 
     protected transient Stats stats;
     protected transient AtomicBoolean complete;
@@ -52,14 +55,19 @@ public abstract class Client implements Callable<Stats>, Serializable {
     }
 
     protected void init() {
+        config.setLogLevel();
+        Log.debug("Client", this + " is initiating...");
         stats = new Stats();
         complete = new AtomicBoolean(false);
+        updateTimer = new Timer();
+        finishTimer = new Timer();
 
         db = loadDB();
         db.init(address, config.get());
 
-        generator = new KeyGenerator(min, max, config.getDistribution());
+        generator = new Generator(min, max, config.getDistribution());
         generator.setParameter(config.getParameter());
+        generator.setOperations(config.getOperations());
 
         double t = (double) config.getThrottle() / 1000.0; // ops/ms
         this.throttle = t >= 0 ?  (t / (double) config.getClients()) : -1; // ops/ms/client
@@ -68,7 +76,7 @@ public abstract class Client implements Callable<Stats>, Serializable {
         data = new byte[config.getDataSize()];
         ThreadLocalRandom.current().nextBytes(data);
 
-        System.out.printf("%s is initiated\n", this);
+        Log.debug("Client", this + " is initiated.");
     }
 
     protected abstract void ready() throws InterruptedException;
@@ -89,7 +97,7 @@ public abstract class Client implements Callable<Stats>, Serializable {
         }
     }
 
-    protected void throttle(long startTime) {
+    void throttle(long startTime) {
         if (throttle > 0) {
             long deadline = startTime + stats.size() * throttleTick;
             long now;
@@ -104,7 +112,7 @@ public abstract class Client implements Callable<Stats>, Serializable {
      *
      * @return DB instance
      */
-    private DB loadDB() {
+    protected DB loadDB() {
         ClassLoader classLoader = Client.class.getClassLoader();
         DB db = null;
         try {
@@ -119,63 +127,166 @@ public abstract class Client implements Callable<Stats>, Serializable {
 
     @Override
     public Stats call() throws Exception {
-        init();
 
-        float get = config.getGetProportion();
-        float put = get + config.getPutProportion();
-        float remove = put + config.getRemoveProportion();
+        init();
 
         ready();
 
         delay();
 
-        Timer ftimer = new Timer();
-        ftimer.scheduleAtFixedRate(new FinishTimer(this), config.getInterval(), config.getInterval());
+        finishTimer.scheduleAtFixedRate(new FinishTimer(this), config.getInterval(), config.getInterval());
 
-        Timer utimer = new Timer();
-        utimer.scheduleAtFixedRate(new UpdateTimer(this), config.getInterval(), config.getInterval());
+        updateTimer.scheduleAtFixedRate(new UpdateTimer(this), config.getInterval(), config.getInterval());
 
+        if (db instanceof KVDB) {
+            return go((KVDB) db);
+        }
+
+        else if (db instanceof SQLDB) {
+            return go((SQLDB) db);
+        }
+
+        else if (db instanceof FSDB) {
+            return go((FSDB) db);
+        }
+
+        else {
+            System.err.println("Unknown DB type.");
+            return null;
+        }
+    }
+
+    protected Stats go(FSDB db) {
         long startTime = System.nanoTime();
-        long s, e;
+        long start = 0;
+        long end = 0;
         while (true) {
-
-            long k = generator.next();
-            Map.Entry entry = db.cast(k, data);
-
-            double r = Math.random();
-
-            if (r <= get) {
-                s = System.nanoTime();
-                db.get(entry.getKey());
-                e = System.nanoTime();
-                stats.add( (e - s) / Stats.MStoNS );
+            switch (generator.nextOperation()) {
+                case CREATE:
+                    start = System.nanoTime();
+                    //db.create()
+                    end = System.nanoTime();
+                    break;
+                case DELETE:
+                    start = System.nanoTime();
+                    end = System.nanoTime();
+                    break;
+                case READ:
+                    start = System.nanoTime();
+                    end = System.nanoTime();
+                    break;
+                case WRITE:
+                    start = System.nanoTime();
+                    end = System.nanoTime();
+                    break;
+                default:
+                    Log.error("Unknown operation type in FSDB.");
             }
-
-            else if (r <= put) {
-                s = System.nanoTime();
-                db.put(entry.getKey(), entry.getValue());
-                e = System.nanoTime();
-                stats.add( (e - s) / Stats.MStoNS );
-            }
-
-            else if (r <= remove) {
-                s = System.nanoTime();
-                db.remove(entry.getKey());
-                e = System.nanoTime();
-                stats.add( (e - s) / Stats.MStoNS );
-            }
-
+            stats.add( (end - start) / Stats.MStoNS );
             if (complete.get()) {
-                utimer.cancel();
+                updateTimer.cancel();
                 return stats;
             }
             throttle(startTime);
         }
     }
 
+    protected Stats go(SQLDB db) {
+        long startTime = System.nanoTime();
+        long start = 0;
+        long end = 0;
+        while (true) {
+
+            switch (generator.nextOperation()) {
+                case QUERY:
+                    start = System.nanoTime();
+                    //db.query();
+                    end = System.nanoTime();
+                    break;
+                case INSERT:
+                    start = System.nanoTime();
+                    //db.insert();
+                    end = System.nanoTime();
+                    break;
+                case UPDATE:
+                    start = System.nanoTime();
+                    //db.update();
+                    end = System.nanoTime();
+                    break;
+                case SCAN:
+                    start = System.nanoTime();
+                    //db.scan();
+                    end = System.nanoTime();
+                    break;
+                case DELETE:
+                    start = System.nanoTime();
+                    //db.delete();
+                    end = System.nanoTime();
+                    break;
+                default:
+                    Log.error("Unknown operation type in SQLDB.");
+            }
+            stats.add( (end - start) / Stats.MStoNS );
+            if (complete.get()) {
+                updateTimer.cancel();
+                return stats;
+            }
+            throttle(startTime);
+        }
+    }
+
+    protected Stats go(KVDB db) {
+        long startTime = System.nanoTime();
+        long start = 0;
+        long end = 0;
+        while (true) {
+            long k = generator.next();
+            Map.Entry entry = db.cast(k, data);
+
+            switch (generator.nextOperation()) {
+                case GET:
+                    start = System.nanoTime();
+                    db.get(entry.getKey());
+                    end = System.nanoTime();
+                    break;
+                case PUT:
+                    start = System.nanoTime();
+                    db.put(entry.getKey(), entry.getValue());
+                    end = System.nanoTime();
+                    break;
+                case SET:
+                    start = System.nanoTime();
+                    db.set(entry.getKey(), entry.getValue());
+                    end = System.nanoTime();
+                    break;
+                case REMOVE:
+                    start = System.nanoTime();
+                    db.remove(entry.getKey());
+                    end = System.nanoTime();
+                    break;
+                case DELETE:
+                    start = System.nanoTime();
+                    db.delete(entry.getKey());
+                    end = System.nanoTime();
+                    break;
+                default:
+                    Log.error("Unknown operation type in KVDB.");
+                    break;
+            }
+            stats.add( (end - start) / Stats.MStoNS );
+
+            if (complete.get()) {
+                updateTimer.cancel();
+                return stats;
+            }
+            throttle(startTime);
+        }
+
+    }
+
     @Override
     public String toString() {
-        return String.format("Client id[%d] key[%d-%d] address[%s] ", id, min, max, address);
+        return String.format("Client [id=%d key=%d-%d address=%s] ", id, min, max, address);
     }
 
 }

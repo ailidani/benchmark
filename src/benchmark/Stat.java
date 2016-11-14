@@ -6,7 +6,7 @@ import java.util.Collection;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-public class Stat implements Serializable {
+class Stat implements Serializable {
 
     private static final long serialVersionUID = 42L;
 

@@ -3,7 +3,7 @@ package benchmark;
 import java.io.Serializable;
 import java.util.*;
 
-public class Stats implements Serializable, Iterable<Stat> {
+class Stats implements Serializable, Iterable<Stat> {
 
     private static final long serialVersionUID = 42L;
 
@@ -43,8 +43,9 @@ public class Stats implements Serializable, Iterable<Stat> {
         stat.setLatencymax(slice.get(n - 1));
         stats.add(stat);
         index = n;
-        System.out.printf("Client[] Elapsed time %s seconds ", elapsed);
-        System.out.printf("Throughput = %f (ops/s)\n", stat.getThroughput());
+        Log.info("Stats", "Client Elapsed time " + elapsed + " seconds Throughput = " + stat.getThroughput() + " (op/s)");
+        // System.out.printf("Client[] Elapsed time %s seconds ", elapsed);
+        // System.out.printf("Throughput = %f (ops/s)\n", stat.getThroughput());
         return stat;
     }
 

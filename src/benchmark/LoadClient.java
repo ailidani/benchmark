@@ -2,9 +2,9 @@ package benchmark;
 
 import java.util.Map;
 
-public class LoadClient extends Client {
+class LoadClient extends Client {
 
-    public LoadClient(int id, long min, long max, String address) {
+    LoadClient(int id, long min, long max, String address) {
         super(id, min, max, address);
     }
 
@@ -15,20 +15,27 @@ public class LoadClient extends Client {
     protected void publish(Stat stat) { }
 
     @Override
-    public Stats call() throws Exception {
+    protected Stats go(FSDB db) {
+        return null;
+    }
 
-        init();
-        delay();
+    @Override
+    protected Stats go(SQLDB db) {
+        return null;
+    }
 
+    @Override
+    protected Stats go(KVDB db) {
         long startTime = System.nanoTime();
-        long s, e;
+        long start, end;
+
         for (long k = min; k < max; k++) {
             Map.Entry entry = db.cast(k, data);
 
-            s = System.nanoTime();
+            start = System.nanoTime();
             db.put(entry.getKey(), entry.getValue());
-            e = System.nanoTime();
-            stats.add( (e - s) / Stats.MStoNS );
+            end = System.nanoTime();
+            stats.add( (end - start) / Stats.MStoNS );
 
             throttle(startTime);
         }

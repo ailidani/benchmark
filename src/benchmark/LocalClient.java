@@ -1,17 +1,18 @@
 package benchmark;
 
-public class LocalClient extends Client {
+class LocalClient extends Client {
 
-    public LocalClient(int id, long min, long max, String address) {
+    LocalClient(int id, long min, long max, String address) {
         super(id, min, max, address);
     }
 
     @Override
     protected void ready() throws InterruptedException {
         try {
+            Log.debug("Client #" + id + " is ready.");
             Coordinator.get().ready();
         } catch (InterruptedException e) {
-            System.err.println("Client #" + id + " was interrupted while waiting on barrier.");
+            Log.error(this + " was interrupted while waiting on barrier.");
             e.printStackTrace();
             throw e;
         }

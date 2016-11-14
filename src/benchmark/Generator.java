@@ -1,19 +1,21 @@
 package benchmark;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class KeyGenerator {
+public class Generator {
 
-
-    public enum Distribution { Constant, Sequence, Uniform, Hotspot, Exponential, Zipfian }
+    public enum Distribution { Constant, Sequence, Uniform, Hotspot, Exponential, Zipfian, Discrete }
 
     private long min;
     private long max;
     private Distribution distribution;
-    private Generator generator;
+    private IGenerator<Long> generator;
+    private Discrete<Operation> operationGenerator;
 
-    public KeyGenerator(long min, long max, Distribution distribution) {
+    public Generator(long min, long max, Distribution distribution) {
         this.min = min;
         this.max = max;
         this.distribution = distribution;
@@ -34,10 +36,19 @@ public class KeyGenerator {
                 generator = new Zipfian();
                 break;
         }
+        operationGenerator = new Discrete<Operation>();
     }
 
     public long next() {
         return generator.next();
+    }
+
+    public Operation nextOperation() {
+        return operationGenerator.next();
+    }
+
+    public void setOperations(Map<Operation, Double> ops) {
+        operationGenerator.add(ops);
     }
 
     public void setParameter(double parameter) {
@@ -48,36 +59,40 @@ public class KeyGenerator {
         }
     }
 
-    private interface Generator {
-        long next();
+    public Distribution distribution() {
+        return distribution;
     }
 
-    private class Constant implements Generator {
+    private interface IGenerator<V> {
+        V next();
+    }
+
+    private class Constant implements IGenerator<Long> {
         private long k = ThreadLocalRandom.current().nextLong(min, max);
 
         @Override
-        public long next() {
+        public Long next() {
             return k;
         }
     }
 
-    private class Sequence implements Generator {
+    private class Sequence implements IGenerator<Long> {
         private AtomicLong k = new AtomicLong(min);
 
         @Override
-        public long next() {
+        public Long next() {
             return k.getAndIncrement();
         }
     }
 
-    private class Uniform implements Generator {
+    private class Uniform implements IGenerator<Long> {
         @Override
-        public long next() {
+        public Long next() {
             return ThreadLocalRandom.current().nextLong(min, max);
         }
     }
 
-    private class Hotspot implements Generator {
+    private class Hotspot implements IGenerator<Long> {
         private ThreadLocalRandom random = ThreadLocalRandom.current();
         private double photset = 0.2;
         private double photops = 1 - photset;
@@ -92,7 +107,7 @@ public class KeyGenerator {
         }
 
         @Override
-        public long next() {
+        public Long next() {
             if (random.nextDouble() < photops) {
                 return random.nextLong(hotset) + min;
             } else {
@@ -101,7 +116,7 @@ public class KeyGenerator {
         }
     }
 
-    private class Zipfian implements Generator {
+    private class Zipfian implements IGenerator<Long> {
         public static final double ZIPFIAN_CONSTANT = 0.99;
         private ThreadLocalRandom random = ThreadLocalRandom.current();
         private long items = max - min + 1;
@@ -115,13 +130,19 @@ public class KeyGenerator {
          */
         private long countforzeta;
 
+        public Zipfian() {
+            zetan = zetastatic(items, ZIPFIAN_CONSTANT);
+            set(zetan);
+        }
+
         public void set(double zetan) {
+            this.zetan = zetan;
             theta = ZIPFIAN_CONSTANT;
             zeta2theta = zeta(2, theta);
             alpha = 1.0 / (1.0 - theta);
-            this.zetan = zetan;
             countforzeta = items;
             eta = (1 - Math.pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zetan);
+            next();
         }
 
         double zeta(long n, double theta) {
@@ -147,8 +168,8 @@ public class KeyGenerator {
         }
 
         @Override
-        public long next() {
-            //from "Quickly Generating Billion-Record Synthetic Databases", Jim Gray et al, SIGMOD 1994
+        public Long next() {
+            //source "Quickly Generating Billion-Record Synthetic Databases", Jim Gray et al, SIGMOD 1994
             if (items != countforzeta) {
                 // have to recompute zetan and eta, since they depend on itemcount
                 synchronized(this) {
@@ -161,7 +182,7 @@ public class KeyGenerator {
                         //note : for large itemsets, this is very slow. so don't do it!
 
                         //TODO: can also have a negative incremental computation, e.g. if you decrease the number of items, then just subtract
-                        //the zeta sequence terms for the items that went away. This would be faster than recomputing from scratch when the number of items
+                        //the zeta sequence terms for the items that went away. This would be faster than recomputing source scratch when the number of items
                         //decreases
 
                         System.err.println("WARNING: Recomputing Zipfian distribtion. This is slow and should be avoided. (itemcount=" + items + " countforzeta=" + countforzeta + ")");
@@ -180,11 +201,46 @@ public class KeyGenerator {
         }
     }
 
+    public class Discrete<V> implements IGenerator<V> {
+        Map<V, Double> values = new HashMap<>();
+        double sum = 0;
+
+        @Override
+        public V next() {
+            double d = Math.random();
+            for (Map.Entry<V, Double> value : values.entrySet()) {
+                double w = value.getValue() / sum;
+                if (d < w) {
+                    return value.getKey();
+                }
+                d -= w;
+            }
+            return null;
+        }
+
+        public void add(V value, double weight) {
+            values.put(value, weight);
+            sum += weight;
+        }
+
+        public void add(Map<V, Double> values) {
+            this.values.putAll(values);
+            sum = 0;
+            for (double w : this.values.values()) {
+                sum += w;
+            }
+        }
+    }
+
     public static void main(String args[]) {
-        KeyGenerator generator = new KeyGenerator(1, 100, Distribution.Uniform);
-        for (int i = 0; i < 1000; i++) {
+        int size = 1000;
+        long[] data = new long[size];
+        Generator generator = new Generator(1, size, Distribution.Zipfian);
+        generator.setParameter(2);
+        for (int i = 0; i < size; i++) {
             System.out.println(generator.next());
         }
+        //System.out.println(Arrays.toString(data));
     }
 
 }

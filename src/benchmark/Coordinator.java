@@ -33,6 +33,7 @@ public class Coordinator {
     private Coordinator() {
         config = new Config();
         config.load();
+        config.setLogLevel();
         mode = config.getBenchmarkMode();
         try {
             webServer = new WebServer();
@@ -153,21 +154,10 @@ public class Coordinator {
             futures.put(client, executor.submit(client));
         }
 
-        Stats stats = new Stats();
-        for (Client client : clients) {
-            try {
-                Stats result = futures.get(client).get();
-                stats.add(result);
-            } catch (InterruptedException e) {
-                // ignore
-            } catch (ExecutionException e) {
-                System.err.printf("%s has error.\n", client);
-            }
-        }
+        Stats stats = aggregate();
 
         System.out.println(stats);
         System.out.printf("Overall : %s\n", stats.overall());
-
     }
 
     public void run() {
@@ -185,6 +175,13 @@ public class Coordinator {
             e.printStackTrace();
         }
 
+        Stats stats = aggregate();
+
+        System.out.println(stats);
+        System.out.printf("Overall : %s\n", stats.overall());
+    }
+
+    private Stats aggregate() {
         Stats stats = new Stats();
         for (Client client : clients) {
             try {
@@ -193,13 +190,11 @@ public class Coordinator {
             } catch (InterruptedException e) {
                 // ignore
             } catch (ExecutionException e) {
-                System.err.printf("%s has error.\n", client);
+                e.printStackTrace();
+                Log.error("Coordinator", client + " has error.");
             }
         }
-
-        System.out.println(stats);
-        System.out.printf("Overall : %s\n", stats.overall());
-
+        return stats;
     }
 
     public void shutdown() {
@@ -210,6 +205,7 @@ public class Coordinator {
 
 
     public static void main(String [] args) {
+
         Coordinator coordinator = Coordinator.get();
 
         if (args.length > 0 && args[0].equalsIgnoreCase("load")) {
@@ -219,6 +215,5 @@ public class Coordinator {
         }
 
         coordinator.shutdown();
-        System.exit(0);
     }
 }

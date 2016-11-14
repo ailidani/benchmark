@@ -1,10 +1,10 @@
 var coordinator = { chart : { data : null } };
 
-//$(Highcharts).setOptions({
-//    global: { useUTC: false }
-//});
-
 var hchart;
+
+// $(Highcharts).setOptions({
+//     global: { useUTC: false }
+// });
 
 $(document).ready( function() {
     coordinator.chart.data = {
@@ -64,13 +64,12 @@ $(document).ready( function() {
         }]
     };
 
-    $('#container').highcharts('StockChart', coordinator.chart.data);
+    $('#throughput').highcharts('StockChart', coordinator.chart.data);
 
 })
 
 // Let the library know where WebSocketMain.swf is:
 WEB_SOCKET_FORCE_FLASH = true
-// Let the library know where WebSocketMain.swf is:
 WEB_SOCKET_SWF_LOCATION = "js/WebSocketMain.swf"
 
 // Write your code in the same way as for native WebSocket:

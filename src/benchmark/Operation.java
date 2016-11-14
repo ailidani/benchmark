@@ -2,34 +2,23 @@ package benchmark;
 
 enum Operation {
 
-    /**
-     * Read
-     */
     GET,
-
-    /**
-     * Write, returns old value
-     */
     PUT,
-
-    /**
-     * Write
-     */
     SET,
-
-    /**
-     * Write, returns old value
-     */
     REMOVE,
-
-    /**
-     * Write
-     */
     DELETE,
+    SNAPSHOT,
 
-    /**
-     * Read, currently no return
-     */
-    SNAPSHOT
+    QUERY,
+    INSERT,
+    UPDATE,
+    SCAN,
 
+    CREATE,
+    READ,
+    WRITE,
+
+    START,
+    COMMIT,
+    ABORT
 }

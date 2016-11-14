@@ -3,7 +3,7 @@ package benchmark;
 import java.util.AbstractMap;
 import java.util.Map;
 
-public abstract class StringDB extends DB<String, String> {
+public abstract class StringDB implements KVDB<String, String> {
 
     /**
      * Replace the default key value type to strings.

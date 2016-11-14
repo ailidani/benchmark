@@ -2,7 +2,7 @@ package benchmark;
 
 import java.util.TimerTask;
 
-public class FinishTimer extends TimerTask {
+class FinishTimer extends TimerTask {
 
     private Client client;
     private long deadline;
@@ -21,6 +21,25 @@ public class FinishTimer extends TimerTask {
             this.cancel();
             client.complete();
         }
+    }
+
+}
+
+/**
+ * Periodic timer task to generate current statistics
+ */
+class UpdateTimer extends TimerTask {
+
+    private Client client;
+
+    public UpdateTimer(Client client) {
+        this.client = client;
+    }
+
+    @Override
+    public void run() {
+        Stat stat = client.stats.slice();
+        client.publish(stat);
     }
 
 }

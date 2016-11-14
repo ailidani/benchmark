@@ -1,6 +1,7 @@
 package database;
 
-import benchmark.DB;
+import benchmark.KVDB;
+import benchmark.Status;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
@@ -10,7 +11,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Properties;
 
-public class HazelcastDB extends DB<Long, byte[]> {
+public class HazelcastDB implements KVDB<Long, byte[]> {
 
     HazelcastInstance client;
     IMap<Long, byte[]> map;
@@ -52,17 +53,15 @@ public class HazelcastDB extends DB<Long, byte[]> {
     }
 
     @Override
-    public void set(Long key, byte[] value) {
+    public Status set(Long key, byte[] value) {
         map.set(key, value);
+        return Status.OK;
     }
 
     @Override
-    public void delete(Long key) {
+    public Status delete(Long key) {
         map.delete(key);
+        return Status.OK;
     }
 
-    @Override
-    public boolean snapshot() {
-        return false;
-    }
 }
