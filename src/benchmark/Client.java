@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
-abstract class Client implements Callable<Stats>, Serializable {
+abstract class Client implements Callable<Stat>, Serializable {
 
     protected static final long serialVersionUID = 42L;
 
@@ -88,7 +88,7 @@ abstract class Client implements Callable<Stats>, Serializable {
      */
     protected void delay() {
         if (throttle > 0 && throttle <= 1.0) {
-            long randomdelay = ThreadLocalRandom.current().nextLong((long)throttle);
+            long randomdelay = ThreadLocalRandom.current().nextLong( (long) throttle);
             long deadline = System.nanoTime() + randomdelay;
             long now;
             while ((now = System.nanoTime()) < deadline) {
@@ -126,7 +126,7 @@ abstract class Client implements Callable<Stats>, Serializable {
     }
 
     @Override
-    public Stats call() throws Exception {
+    public Stat call() throws Exception {
 
         init();
 
@@ -156,7 +156,7 @@ abstract class Client implements Callable<Stats>, Serializable {
         }
     }
 
-    protected Stats go(FSDB db) {
+    protected Stat go(FSDB db) {
         long startTime = System.nanoTime();
         long start = 0;
         long end = 0;
@@ -185,13 +185,14 @@ abstract class Client implements Callable<Stats>, Serializable {
             stats.add( (end - start) / Stats.MStoNS );
             if (complete.get()) {
                 updateTimer.cancel();
-                return stats;
+                db.cleanup();
+                return stats.overall();
             }
             throttle(startTime);
         }
     }
 
-    protected Stats go(SQLDB db) {
+    protected Stat go(SQLDB db) {
         long startTime = System.nanoTime();
         long start = 0;
         long end = 0;
@@ -229,13 +230,14 @@ abstract class Client implements Callable<Stats>, Serializable {
             stats.add( (end - start) / Stats.MStoNS );
             if (complete.get()) {
                 updateTimer.cancel();
-                return stats;
+                db.cleanup();
+                return stats.overall();
             }
             throttle(startTime);
         }
     }
 
-    protected Stats go(KVDB db) {
+    protected Stat go(KVDB db) {
         long startTime = System.nanoTime();
         long start = 0;
         long end = 0;
@@ -277,7 +279,8 @@ abstract class Client implements Callable<Stats>, Serializable {
 
             if (complete.get()) {
                 updateTimer.cancel();
-                return stats;
+                db.cleanup();
+                return stats.overall();
             }
             throttle(startTime);
         }

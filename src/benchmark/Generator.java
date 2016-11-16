@@ -68,7 +68,7 @@ public class Generator {
     }
 
     private class Constant implements IGenerator<Long> {
-        private long k = ThreadLocalRandom.current().nextLong(min, max);
+        private long k = ThreadLocalRandom.current().nextLong(min, max+1);
 
         @Override
         public Long next() {
@@ -235,8 +235,8 @@ public class Generator {
     public static void main(String args[]) {
         int size = 1000;
         long[] data = new long[size];
-        Generator generator = new Generator(1, size, Distribution.Zipfian);
-        generator.setParameter(2);
+        Generator generator = new Generator(1, 100, Distribution.Zipfian);
+        generator.setParameter(1.5);
         for (int i = 0; i < size; i++) {
             System.out.println(generator.next());
         }

@@ -15,17 +15,17 @@ class LoadClient extends Client {
     protected void publish(Stat stat) { }
 
     @Override
-    protected Stats go(FSDB db) {
+    protected Stat go(FSDB db) {
         return null;
     }
 
     @Override
-    protected Stats go(SQLDB db) {
+    protected Stat go(SQLDB db) {
         return null;
     }
 
     @Override
-    protected Stats go(KVDB db) {
+    protected Stat go(KVDB db) {
         long startTime = System.nanoTime();
         long start, end;
 
@@ -40,6 +40,6 @@ class LoadClient extends Client {
             throttle(startTime);
         }
 
-        return stats;
+        return stats.overall();
     }
 }

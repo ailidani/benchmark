@@ -1,7 +1,6 @@
 package simulator;
 
 import benchmark.Coordinator;
-import benchmark.Log;
 
 import java.util.concurrent.DelayQueue;
 
@@ -11,18 +10,20 @@ public class Test {
 
     public static void main(String[] args) {
 
-        Log.set(Log.LEVEL_INFO);
+        // Log.set(Log.LEVEL_INFO);
 
         Coordinator coordinator = Coordinator.get();
 
-        for (int n = 3; n <= 15; n+=2) {
+        for (int n = 3; n <= 15; n++) {
             Raft.N = n;
             coordinator.run();
             coordinator.shutdown();
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-
-
-
 
 //        Generator generator = new Generator(100, 1000, Generator.Distribution.Zipfian);
 //        for (long i = 0; i < 100; i++) {

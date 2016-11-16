@@ -11,6 +11,7 @@ class Stat implements Serializable {
     private static final long serialVersionUID = 42L;
 
     private long count = 0;
+    private double elapsed = 0; // s
     private double throughput = 0; // op/s
     private double latency = -1; // ms
     private double latency95 = -1;
@@ -26,6 +27,7 @@ class Stat implements Serializable {
         if (that.isEmpty()) return;
         if (this.isEmpty()) {
             this.count = that.count;
+            this.elapsed = that.elapsed;
             this.throughput = that.throughput;
             this.latency = that.latency;
             this.latency95 = that.latency95;
@@ -34,6 +36,7 @@ class Stat implements Serializable {
             this.latencymax = that.latencymax;
         } else {
             this.count += that.count;
+            this.elapsed = max(this.elapsed, that.elapsed);
             this.throughput += that.throughput;
             this.latency = (this.latency + that.latency) / 2.0;
             this.latency95 = max(this.latency95, that.latency95);
@@ -65,6 +68,15 @@ class Stat implements Serializable {
 
     public Stat setCount(long count) {
         this.count = count;
+        return this;
+    }
+
+    public double getElapsed() {
+        return elapsed;
+    }
+
+    public Stat setElapsed(double elapsed) {
+        this.elapsed = elapsed;
         return this;
     }
 

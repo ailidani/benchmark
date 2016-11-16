@@ -4,8 +4,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
 
-/** A low overhead, lightweight logging system.
- * @author Nathan Sweet <misc@n4te.com> */
+/**
+ * A low overhead, lightweight logging system.
+ */
 public class Log {
     /** No logging at all. */
     static public final int LEVEL_NONE = 6;
@@ -93,6 +94,10 @@ public class Log {
         if (ERROR) logger.log(LEVEL_ERROR, category, message, null);
     }
 
+    static public void error (String category, String format, Object ... args) {
+        error(category, String.format(format, args));
+    }
+
     static public void warn (String message, Throwable ex) {
         if (WARN) logger.log(LEVEL_WARN, null, message, ex);
     }
@@ -107,6 +112,10 @@ public class Log {
 
     static public void warn (String category, String message) {
         if (WARN) logger.log(LEVEL_WARN, category, message, null);
+    }
+
+    static public void warn (String category, String format, Object ... args) {
+        warn(category, String.format(format, args));
     }
 
     static public void info (String message, Throwable ex) {
@@ -125,6 +134,10 @@ public class Log {
         if (INFO) logger.log(LEVEL_INFO, category, message, null);
     }
 
+    static public void info (String category, String format, Object ... args) {
+        info(category, String.format(format, args));
+    }
+
     static public void debug (String message, Throwable ex) {
         if (DEBUG) logger.log(LEVEL_DEBUG, null, message, ex);
     }
@@ -141,6 +154,10 @@ public class Log {
         if (DEBUG) logger.log(LEVEL_DEBUG, category, message, null);
     }
 
+    static public void debug(String category, String format, Object ... args) {
+        debug(category, String.format(format, args));
+    }
+
     static public void trace (String message, Throwable ex) {
         if (TRACE) logger.log(LEVEL_TRACE, null, message, ex);
     }
@@ -155,6 +172,10 @@ public class Log {
 
     static public void trace (String category, String message) {
         if (TRACE) logger.log(LEVEL_TRACE, category, message, null);
+    }
+
+    static public void trace (String category, String format, Object ... args) {
+        trace(category, String.format(format, args));
     }
 
     private Log () {

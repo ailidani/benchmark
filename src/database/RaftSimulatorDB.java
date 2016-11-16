@@ -2,6 +2,7 @@ package database;
 
 import benchmark.KVDB;
 import benchmark.Status;
+import simulator.Client;
 import simulator.Raft;
 
 import java.util.AbstractMap;
@@ -10,7 +11,7 @@ import java.util.Properties;
 
 public class RaftSimulatorDB implements KVDB<Long, Long> {
 
-    private Raft.Client client;
+    private Client client;
 
     @Override
     public Map.Entry<Long, Long> cast(long key, byte[] value) {
@@ -19,10 +20,11 @@ public class RaftSimulatorDB implements KVDB<Long, Long> {
 
     @Override
     public void init(String address, Properties properties) {
-        // int n = Integer.valueOf(properties.getProperty("simulator.nodes"));
+        Raft.N  = Integer.valueOf(properties.getProperty("simulator.nodes"));
+        System.out.println("N = " + Raft.N);
         Raft raft = Raft.instance();
         raft.start();
-        client = raft.new Client("Client");
+        client = new Client("Client" + (int) (Math.random() * 100));
         new Thread(client).start();
     }
 
@@ -43,13 +45,14 @@ public class RaftSimulatorDB implements KVDB<Long, Long> {
 
     @Override
     public Status set(Long key, Long value) {
-        client.send(key, value);
+        client.send();
         return Status.OK;
     }
 
     @Override
     public void cleanup() {
-
+        client.terminate();
+        Raft.instance().stop();
     }
 
     @Override

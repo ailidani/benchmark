@@ -21,7 +21,7 @@ public class Coordinator {
      * Centralized executor has same number of threads as number of clients.
      */
     private ExecutorService executor;
-    private Map<Client, Future<Stats>> futures = new HashMap<>();
+    private Map<Client, Future<Stat>> futures = new HashMap<>();
     private CountDownLatch ready;
     private CountDownLatch start;
     private ICountDownLatch dready;
@@ -125,7 +125,7 @@ public class Coordinator {
     }
 
     public void load() {
-        System.out.printf("Loading %d keys into DB %s with data size %d... \n", config.getRecordCount(), config.getDB(), config.getDataSize());
+        Log.info("Coordinator", "Loading %d keys into DB %s with data size %d...", config.getRecordCount(), config.getDB(), config.getDataSize());
         int n = config.getClients();
         clients = new Client[n];
         long interval = config.getRecordCount() / n;
@@ -154,15 +154,14 @@ public class Coordinator {
             futures.put(client, executor.submit(client));
         }
 
-        Stats stats = aggregate();
+        Stat stat = aggregate();
 
-        System.out.println(stats);
-        System.out.printf("Overall : %s\n", stats.overall());
+        System.out.printf("Overall : %s\n", stat);
     }
 
     public void run() {
         init();
-        System.out.println("Running benchmark for " + (config.getTotalTime() + config.getWarmupTime()) + " seconds... ");
+        Log.info("Coordinator", "Running benchmark for %d seconds...", config.getTotalTime() + config.getWarmupTime());
         long startTime = System.nanoTime();
 
         for (Client client : clients) {
@@ -175,18 +174,18 @@ public class Coordinator {
             e.printStackTrace();
         }
 
-        Stats stats = aggregate();
+        Stat stat = aggregate();
 
-        System.out.println(stats);
-        System.out.printf("Overall : %s\n", stats.overall());
+        Log.info("Coordinator", "Overall : %s", stat);
+        //System.out.printf("Overall : %s\n", stat);
     }
 
-    private Stats aggregate() {
-        Stats stats = new Stats();
+    private Stat aggregate() {
+        Stat stat = new Stat();
         for (Client client : clients) {
             try {
-                Stats result = futures.get(client).get();
-                stats.add(result);
+                Stat result = futures.get(client).get();
+                stat.add(result);
             } catch (InterruptedException e) {
                 // ignore
             } catch (ExecutionException e) {
@@ -194,7 +193,7 @@ public class Coordinator {
                 Log.error("Coordinator", client + " has error.");
             }
         }
-        return stats;
+        return stat;
     }
 
     public void shutdown() {
